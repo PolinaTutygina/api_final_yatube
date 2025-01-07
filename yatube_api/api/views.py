@@ -1,6 +1,7 @@
 from rest_framework import viewsets, mixins, permissions
 from rest_framework import filters
-from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
+from rest_framework.permissions import IsAuthenticatedOrReadOnly
+from .permissions import ReadOnlyOrIsAuthorPermission, IsAuthenticatedForFollow
 from rest_framework.exceptions import ValidationError, PermissionDenied
 from posts.models import Post, Comment, Group, Follow
 from .serializers import PostSerializer, CommentSerializer, GroupSerializer, FollowSerializer
@@ -9,7 +10,7 @@ from .serializers import PostSerializer, CommentSerializer, GroupSerializer, Fol
 class PostViewSet(viewsets.ModelViewSet):
     queryset = Post.objects.all()
     serializer_class = PostSerializer
-    permission_classes = (IsAuthenticated,)
+    permission_classes = (ReadOnlyOrIsAuthorPermission,)
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
@@ -27,7 +28,7 @@ class PostViewSet(viewsets.ModelViewSet):
 
 class CommentViewSet(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
-    permission_classes = (IsAuthenticated,)
+    permission_classes = (ReadOnlyOrIsAuthorPermission,)
 
     def get_queryset(self):
         post_id = self.kwargs.get('post_id')
@@ -60,7 +61,7 @@ class GroupViewSet(viewsets.ReadOnlyModelViewSet):
 
 class FollowViewSet(mixins.ListModelMixin, mixins.CreateModelMixin, viewsets.GenericViewSet):
     serializer_class = FollowSerializer
-    permission_classes = (IsAuthenticated,)
+    permission_classes = (IsAuthenticatedForFollow,)
     filter_backends = (filters.SearchFilter,)
     search_fields = ('following__username',)
 
